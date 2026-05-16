@@ -69,6 +69,10 @@
                         </span>
                         <input type="file" id="bg-file" accept="image/*" class="hidden">
                     </label>
+                    <div id="bg-scale-container" class="hidden items-center justify-between px-3 py-2 bg-white/70 border border-slate-200 rounded-lg shadow-sm backdrop-blur-sm">
+                        <span class="text-slate-600 font-medium text-xs">画像サイズ</span>
+                        <input type="range" id="bg-scale" min="5" max="300" value="100" class="w-24 accent-blue-500 cursor-pointer">
+                    </div>
                     <div class="flex items-center justify-between px-4 py-2 bg-white/70 border border-slate-200 rounded-lg text-sm shadow-sm backdrop-blur-sm">
                         <span class="text-slate-600 font-medium">背景色</span>
                         <div class="w-8 h-8 rounded-md overflow-hidden border border-slate-200 shadow-inner">
@@ -122,7 +126,8 @@
         <main id="workspace" class="flex-1 relative overflow-hidden bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAD/v///0A2c2ZmZghlIagAkwqMGjDcACM6/iNGHFHAgwZAAwAEZ1d49w7GNgAAAABJRU5ErkJggg==')]">
             
             <!-- ユーザーが指定する背景画像 -->
-            <img id="bg-img" class="absolute pointer-events-none transform -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 max-w-none shadow-xl" style="display:none;" />
+            <!-- transform クラスを外し、インラインスタイルで scale を制御するように変更 -->
+            <img id="bg-img" class="absolute pointer-events-none left-1/2 top-1/2 max-w-none shadow-xl origin-center transition-transform duration-75" style="display:none; transform: translate(-50%, -50%) scale(1);" />
             
             <!-- クロップ枠（キャンバス） -->
             <div id="canvas-frame" class="absolute border-2 border-blue-500 shadow-[0_0_0_9999px_rgba(255,255,255,0.6)] backdrop-blur-[1px]" style="width: 300px; height: 300px; left: calc(50% - 150px); top: calc(50% - 150px);">
@@ -221,7 +226,7 @@
                         <span class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs font-extrabold">1</span>
                         背景（モックアップ）の準備
                     </h3>
-                    <p class="text-sm pl-9 leading-relaxed">左パネルの「画像を選択」から、Tシャツやアクリルスタンドなどのベース画像（または背景色）を設定します。</p>
+                    <p class="text-sm pl-9 leading-relaxed">左パネルの「画像を選択」から、Tシャツやアクリルスタンドなどのベース画像（または背景色）を設定します。読み込んだ画像は画面に合わせて自動調整されますが、必要に応じて「画像サイズ」のスライダーで拡縮することもできます。</p>
                 </div>
 
                 <!-- Step 2 -->
@@ -296,7 +301,8 @@
             images: [], // { id, img, name, origW, origH, x, y, w, h, hasLeak, leakDataUrl }
             selectedId: null,
             isScaleLocked: false,
-            lockedPxPerCm: null
+            lockedPxPerCm: null,
+            bgScale: 1
         };
 
         // DOM Elements
@@ -304,6 +310,8 @@
         const bgImgEl = document.getElementById('bg-img');
         const bgFile = document.getElementById('bg-file');
         const bgColor = document.getElementById('bg-color');
+        const bgScaleContainer = document.getElementById('bg-scale-container');
+        const bgScaleInput = document.getElementById('bg-scale');
         const btnClearBg = document.getElementById('btn-clear-bg');
         const canvasFrame = document.getElementById('canvas-frame');
         const frameDragArea = document.getElementById('frame-drag-area');
@@ -334,12 +342,41 @@
             const file = e.target.files[0];
             if (file) {
                 const url = URL.createObjectURL(file);
+                bgImgEl.onload = () => {
+                    // ワークスペースのサイズに合わせて初期スケールを計算
+                    const wsRect = workspace.getBoundingClientRect();
+                    // ワークスペースの90%のサイズに収まるように計算
+                    const availableW = wsRect.width * 0.9;
+                    const availableH = wsRect.height * 0.9;
+                    
+                    const scaleX = availableW / bgImgEl.naturalWidth;
+                    const scaleY = availableH / bgImgEl.naturalHeight;
+                    
+                    // はみ出ないように最小のスケール値を採用（画像が十分小さい場合は1倍）
+                    let initialScale = Math.min(scaleX, scaleY, 1);
+                    
+                    state.bgScale = initialScale;
+                    bgScaleInput.value = initialScale * 100;
+                    
+                    bgImgEl.style.transform = `translate(-50%, -50%) scale(${state.bgScale})`;
+                    bgImgEl.style.display = 'block';
+                    
+                    // スライダーコンテナの表示
+                    bgScaleContainer.classList.remove('hidden');
+                    bgScaleContainer.classList.add('flex');
+                    
+                    workspace.style.backgroundImage = 'none'; // 画像配置時は模様を消す
+                    btnClearBg.classList.remove('hidden');
+                    guideText.style.display = 'none';
+                };
                 bgImgEl.src = url;
-                bgImgEl.style.display = 'block';
-                workspace.style.backgroundImage = 'none'; // 画像配置時は模様を消す
-                btnClearBg.classList.remove('hidden');
-                guideText.style.display = 'none';
             }
+        });
+
+        // 背景サイズスライダーの処理
+        bgScaleInput.addEventListener('input', (e) => {
+            state.bgScale = e.target.value / 100;
+            bgImgEl.style.transform = `translate(-50%, -50%) scale(${state.bgScale})`;
         });
 
         bgColor.addEventListener('input', (e) => {
@@ -353,6 +390,10 @@
             bgImgEl.src = '';
             bgImgEl.style.display = 'none';
             bgFile.value = '';
+            
+            // スライダーを隠す
+            bgScaleContainer.classList.add('hidden');
+            bgScaleContainer.classList.remove('flex');
             
             workspace.style.backgroundImage = ''; // 格子模様を復活
             workspace.style.backgroundColor = '';
@@ -1021,18 +1062,20 @@
             ctx.fillStyle = workspace.style.backgroundColor || bgColor.value || defaultBgColor;
             ctx.fillRect(0, 0, cvs.width, cvs.height);
 
-            // 2. 背景画像の描画（中央配置）
+            // 2. 背景画像の描画（中央配置 + スケール適用）
             if (bgImgEl.src && bgImgEl.style.display !== 'none') {
                 const imgW = bgImgEl.naturalWidth;
                 const imgH = bgImgEl.naturalHeight;
                 const cx = wsRect.width / 2;
                 const cy = wsRect.height / 2;
+                const renderW = imgW * state.bgScale;
+                const renderH = imgH * state.bgScale;
                 ctx.drawImage(
                     bgImgEl, 
-                    (cx - imgW / 2) * scale, 
-                    (cy - imgH / 2) * scale, 
-                    imgW * scale, 
-                    imgH * scale
+                    (cx - renderW / 2) * scale, 
+                    (cy - renderH / 2) * scale, 
+                    renderW * scale, 
+                    renderH * scale
                 );
             }
 
