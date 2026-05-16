@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POD Graphic Maker - 入稿データ作成・品質チェックツール</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* スクロールバーのカスタマイズ (ライトモード用) */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* 枠の外側を暗くするマスキング用のスタイル */
+        .mask-outline {
+            outline: 9999px solid rgba(255, 255, 255, 0.4);
+        }
+    </style>
+</head>
+<!-- 背景は柔らかいグラデーションで、上に乗るグラスモーフィズムを引き立たせる -->
+<body class="bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-indigo-100 via-slate-50 to-cyan-100 text-slate-800 font-sans h-screen flex flex-col overflow-hidden select-none">
+
+    <!-- Header (グラスモーフィズム) -->
+    <header class="flex items-center justify-between px-6 py-3 bg-white/60 backdrop-blur-md border-b border-white/60 shadow-sm z-20">
+        <h1 class="text-xl font-extrabold tracking-tight text-slate-800 flex items-center gap-2">
+            <div class="p-1.5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            POD Graphic Maker 
+            <span class="text-xs text-slate-500 font-medium ml-2 tracking-normal border-l border-slate-300 pl-3">入稿データ作成・品質チェックツール</span>
+        </h1>
+        <div class="flex items-center gap-3">
+            <!-- 使い方ボタン (ライト・立体) -->
+            <button id="btn-show-manual" class="flex items-center gap-2 px-4 py-2 bg-gradient-to-b from-white to-slate-100 hover:to-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-all border border-slate-200 shadow-sm hover:shadow-md active:scale-95 mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                使い方
+            </button>
+            <!-- モックアップ出力ボタン (ダーク・立体) -->
+            <button id="btn-export-mockup" class="flex items-center gap-2 px-4 py-2 bg-gradient-to-b from-slate-600 to-slate-800 hover:from-slate-500 hover:to-slate-700 text-white rounded-lg text-sm font-semibold transition-all border border-slate-600 shadow-[0_4px_10px_rgba(30,41,59,0.2)] hover:shadow-[0_6px_15px_rgba(30,41,59,0.3)] active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                背景ごと出力
+            </button>
+            <!-- 印刷出力ボタン (プライマリー・グラデーション立体) -->
+            <button id="btn-export-print" class="flex items-center gap-2 px-4 py-2 bg-gradient-to-b from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white rounded-lg text-sm font-semibold transition-all border border-blue-400/50 shadow-[0_4px_12px_rgba(79,70,229,0.3)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.4)] active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                枠内のみ出力(素材)
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        <!-- 背景のデコレーション (グラスモーフィズムを綺麗に見せるため) -->
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-400/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- Left Sidebar (グラスモーフィズム) -->
+        <aside class="w-72 bg-white/40 backdrop-blur-xl border-r border-white/60 shadow-[4px_0_24px_rgba(0,0,0,0.02)] p-5 flex flex-col gap-6 overflow-y-auto z-10">
+            <div>
+                <h2 class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider flex items-center gap-2">
+                    <div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div> 1. 背景（モックアップ）
+                </h2>
+                <div class="flex flex-col gap-2">
+                    <label class="block w-full text-center px-4 py-2.5 bg-white border border-slate-200 hover:border-blue-300 hover:text-blue-600 rounded-lg text-sm font-medium cursor-pointer transition-all shadow-sm active:scale-95">
+                        <span class="flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            画像を選択
+                        </span>
+                        <input type="file" id="bg-file" accept="image/*" class="hidden">
+                    </label>
+                    <div class="flex items-center justify-between px-4 py-2 bg-white/70 border border-slate-200 rounded-lg text-sm shadow-sm backdrop-blur-sm">
+                        <span class="text-slate-600 font-medium">背景色</span>
+                        <div class="w-8 h-8 rounded-md overflow-hidden border border-slate-200 shadow-inner">
+                            <input type="color" id="bg-color" value="#f8fafc" class="w-12 h-12 -m-2 cursor-pointer border-none bg-transparent">
+                        </div>
+                    </div>
+                </div>
+                <button id="btn-clear-bg" class="mt-3 w-full text-xs font-medium text-slate-400 hover:text-red-500 text-right hidden transition-colors">背景を初期化</button>
+            </div>
+
+            <hr class="border-slate-200/60" />
+
+            <div>
+                <h2 class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider flex items-center gap-2">
+                    <div class="w-1.5 h-1.5 rounded-full bg-indigo-500"></div> 2. 枠（印刷範囲）の実寸
+                </h2>
+                <div class="flex gap-3 mb-3">
+                    <div class="flex-1 relative">
+                        <label class="text-[10px] text-slate-400 mb-1 block absolute -top-2 left-2 bg-white px-1 font-bold z-10">幅 (cm)</label>
+                        <input type="number" id="input-cm-w" value="30" step="0.1" class="w-full bg-white/80 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-medium outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 shadow-inner transition-all relative z-0">
+                    </div>
+                    <div class="flex-1 relative">
+                        <label class="text-[10px] text-slate-400 mb-1 block absolute -top-2 left-2 bg-white px-1 font-bold z-10">高さ (cm)</label>
+                        <input type="number" id="input-cm-h" value="30" step="0.1" class="w-full bg-white/80 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-medium outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 shadow-inner transition-all relative z-0">
+                    </div>
+                </div>
+                
+                <button id="btn-lock-scale" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all border mb-2 bg-gradient-to-b from-white to-slate-50 hover:to-slate-100 text-slate-700 border-slate-200 shadow-sm active:scale-95">
+                    <svg id="icon-unlock" class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+                    <svg id="icon-lock" class="w-4 h-4 hidden text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <span id="text-lock-scale">縮尺(スケール)を固定する</span>
+                </button>
+                <p class="text-xs text-slate-400 leading-relaxed" id="desc-lock-scale">背景画像に合わせて枠を調整後、「固定」してください。</p>
+            </div>
+
+            <hr class="border-slate-200/60" />
+
+            <div>
+                <h2 class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider flex items-center gap-2">
+                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> 3. 品質チェック基準
+                </h2>
+                <div class="relative mt-2">
+                    <label class="text-[10px] text-slate-400 mb-1 block absolute -top-2 left-2 bg-white px-1 font-bold z-10">警告を出す最低解像度 (dpi)</label>
+                    <input type="number" id="input-target-dpi" value="200" class="w-full bg-white/80 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-inner transition-all relative z-0">
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Workspace -->
+        <!-- ライトモードの明るい市松模様のBase64に変更 -->
+        <main id="workspace" class="flex-1 relative overflow-hidden bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAD/v///0A2c2ZmZghlIagAkwqMGjDcACM6/iNGHFHAgwZAAwAEZ1d49w7GNgAAAABJRU5ErkJggg==')]">
+            
+            <!-- ユーザーが指定する背景画像 -->
+            <img id="bg-img" class="absolute pointer-events-none transform -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 max-w-none shadow-xl" style="display:none;" />
+            
+            <!-- クロップ枠（キャンバス） -->
+            <div id="canvas-frame" class="absolute border-2 border-blue-500 shadow-[0_0_0_9999px_rgba(255,255,255,0.6)] backdrop-blur-[1px]" style="width: 300px; height: 300px; left: calc(50% - 150px); top: calc(50% - 150px);">
+                <!-- 枠の移動用領域 -->
+                <div id="frame-drag-area" class="absolute inset-0 bg-transparent cursor-move"></div>
+                
+                <!-- 配置画像のコンテナ (枠内でクリッピングされる) -->
+                <div id="layers-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+                
+                <!-- 枠のリサイズハンドル -->
+                <div id="frame-resize" class="absolute -right-3 -bottom-3 w-6 h-6 bg-white border-2 border-blue-500 rounded-full cursor-nwse-resize z-50 shadow-md"></div>
+            </div>
+
+            <!-- 初期ガイドテキスト (グラスモーフィズム) -->
+            <div id="guide-text" class="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                <div class="bg-white/80 px-8 py-6 rounded-2xl text-center backdrop-blur-md shadow-2xl border border-white/60">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </div>
+                    <p class="text-slate-800 font-bold text-lg mb-1">画像をドラッグ＆ドロップ</p>
+                    <p class="text-slate-500 text-sm">または左メニューから背景を設定</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar (グラスモーフィズム) -->
+        <aside class="w-80 bg-white/40 backdrop-blur-xl border-l border-white/60 shadow-[-4px_0_24px_rgba(0,0,0,0.02)] flex flex-col z-10">
+            <div class="p-5 border-b border-slate-200/60">
+                <button id="btn-scan" class="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-b from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-white rounded-lg font-bold transition-all border border-orange-400/50 shadow-[0_4px_12px_rgba(249,115,22,0.3)] hover:shadow-[0_6px_16px_rgba(249,115,22,0.4)] active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    透過漏れをスキャン
+                </button>
+                <div id="scan-result" class="hidden"></div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4">
+                <h2 class="text-xs font-bold text-slate-500 mb-3 px-1 uppercase tracking-wider flex items-center gap-2">
+                    <div class="w-1.5 h-1.5 rounded-full bg-slate-400"></div> 配置画像リスト
+                </h2>
+                <div id="layers-list" class="flex flex-col gap-3">
+                    <div class="text-xs text-slate-400 px-1 italic text-center py-4 bg-white/50 rounded-lg border border-slate-200 border-dashed" id="empty-layers-msg">画像がありません</div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- 透過漏れチェック専用画面 (モーダル) -->
+    <div id="leak-inspector-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-center p-6 sm:p-12 transition-opacity duration-300">
+        <div class="w-full max-w-6xl flex justify-between items-center mb-6">
+            <div class="flex items-center gap-4 bg-white/90 px-5 py-3 rounded-2xl shadow-lg border border-white/50 backdrop-blur-md">
+                <div class="p-2 bg-red-100 text-red-600 rounded-full shadow-inner">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+                </div>
+                <h2 class="text-xl font-bold text-slate-800 tracking-wide">
+                    透過漏れインスペクター 
+                    <span class="text-slate-500 text-base font-medium ml-3 border-l border-slate-300 pl-3" id="inspector-file-name"></span>
+                </h2>
+            </div>
+            <button id="btn-close-inspector" class="text-slate-500 hover:text-slate-800 bg-white hover:bg-slate-50 p-3 rounded-full transition-all border border-slate-200 shadow-md hover:shadow-lg active:scale-95">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        
+        <div class="relative w-full flex-1 border border-slate-200 rounded-2xl shadow-2xl flex items-center justify-center overflow-hidden bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAD/v///0A2c2ZmZghlIagAkwqMGjDcACM6/iNGHFHAgwZAAwAEZ1d49w7GNgAAAABJRU5ErkJggg==')]">
+            <img id="inspector-orig-img" class="absolute max-w-full max-h-full object-contain pointer-events-none" />
+            <img id="inspector-leak-img" class="absolute max-w-full max-h-full object-contain pointer-events-none mix-blend-normal opacity-90 filter drop-shadow-[0_0_8px_rgba(255,0,0,0.8)]" />
+        </div>
+        
+        <div class="mt-6 text-slate-700 font-medium text-center text-sm bg-white/95 py-3 px-8 rounded-full border border-white/50 shadow-lg flex items-center gap-3 backdrop-blur-md">
+            <svg class="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            黄色くハイライトされている部分に「完全な透明ではない（半透明のゴミ）」が存在します。画像編集ソフトで修正してください。
+        </div>
+    </div>
+
+    <!-- 使い方マニュアル (モーダル) -->
+    <div id="manual-modal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex flex-col items-center justify-center p-6 sm:p-12 transition-opacity duration-300">
+        <div class="w-full max-w-3xl bg-white border border-slate-200 rounded-2xl shadow-2xl flex flex-col max-h-full overflow-hidden">
+            <div class="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-lg shadow-sm">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    </div>
+                    <h2 class="text-xl font-extrabold text-slate-800 tracking-wide">
+                        POD Graphic Maker の使い方
+                    </h2>
+                </div>
+                <button id="btn-close-manual" class="text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 p-2 rounded-full transition-all border border-slate-200 shadow-sm active:scale-95">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            
+            <div class="p-8 overflow-y-auto space-y-8 text-slate-600 bg-white">
+                <!-- Step 1 -->
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-100">
+                    <h3 class="text-slate-800 font-bold flex items-center gap-3 mb-2 text-base">
+                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs font-extrabold">1</span>
+                        背景（モックアップ）の準備
+                    </h3>
+                    <p class="text-sm pl-9 leading-relaxed">左パネルの「画像を選択」から、Tシャツやアクリルスタンドなどのベース画像（または背景色）を設定します。</p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-100">
+                    <h3 class="text-slate-800 font-bold flex items-center gap-3 mb-2 text-base">
+                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs font-extrabold">2</span>
+                        印刷枠（キャンバス）の調整と固定
+                    </h3>
+                    <div class="text-sm pl-9 leading-relaxed space-y-2">
+                        <p>1. 中央の青い枠をドラッグ＆リサイズして、背景画像の「印刷したい範囲」に合わせます。</p>
+                        <p>2. 枠を合わせたら、左パネルの<span class="text-slate-800 font-bold bg-white px-2 py-0.5 rounded shadow-sm border border-slate-200 inline-block mx-1">縮尺(スケール)を固定する</span>ボタンを押します。</p>
+                        <p class="text-slate-400 text-xs mt-1">※固定後は、枠のサイズを変更すると実寸(cm)も連動して変動するようになります。</p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-100">
+                    <h3 class="text-slate-800 font-bold flex items-center gap-3 mb-2 text-base">
+                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs font-extrabold">3</span>
+                        デザイン画像の配置
+                    </h3>
+                    <div class="text-sm pl-9 leading-relaxed space-y-2">
+                        <p>1. 枠の中にデザイン画像（PNG/JPG等）をドラッグ＆ドロップします。</p>
+                        <p>2. 配置した画像をクリックすると、リサイズや移動が可能です。</p>
+                        <p>3. 画像上や右パネルに表示される「dpi（解像度）」を確認し、<span class="text-red-500 font-bold">赤字（200dpi未満）</span>にならないよう調整してください。</p>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-100">
+                    <h3 class="text-slate-800 font-bold flex items-center gap-3 mb-2 text-base">
+                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-600 text-xs font-extrabold">4</span>
+                        品質チェック（透過漏れ検知）
+                    </h3>
+                    <div class="text-sm pl-9 leading-relaxed space-y-2">
+                        <p>1. 右パネルの<span class="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200 inline-block mx-1">透過漏れをスキャン</span>ボタンを押します。</p>
+                        <p>2. 目に見えない半透明のゴミ（アルファ値の残り）を自動で検知します。</p>
+                        <p>3. エラーが出た画像は、リストに<span class="text-red-500 font-bold">「透過漏れを検知しました」</span>と表示されます。</p>
+                        <p>4. 「詳細表示」をクリックすると専用画面が開き、ゴミの場所が<span class="text-amber-500 font-bold">黄色くハイライト</span>されます。</p>
+                    </div>
+                </div>
+
+                <!-- Step 5 -->
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-100">
+                    <h3 class="text-slate-800 font-bold flex items-center gap-3 mb-2 text-base">
+                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs font-extrabold">5</span>
+                        画像の出力
+                    </h3>
+                    <p class="text-sm pl-9 leading-relaxed">
+                        ヘッダー右上から用途に合わせて画像を出力します。<br>
+                        <span class="text-slate-800 font-bold mt-2 inline-block">・背景ごと出力：</span> SNSや確認用のモックアップ画像として出力します。<br>
+                        <span class="text-slate-800 font-bold mt-1 inline-block">・枠内のみ出力：</span> 印刷所に入稿するための高解像度（350dpi）素材として出力します。
+                    </p>
+                </div>
+            </div>
+            
+            <div class="p-5 border-t border-slate-200 bg-slate-50 flex justify-end">
+                <button id="btn-close-manual-bottom" class="px-6 py-2.5 bg-gradient-to-b from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white rounded-lg text-sm font-bold transition-all shadow-[0_4px_12px_rgba(79,70,229,0.3)] hover:shadow-[0_6px_16px_rgba(79,70,229,0.4)] active:scale-95">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        const state = {
+            cmW: 30,
+            cmH: 30,
+            targetDpi: 200,
+            exportDpi: 350,
+            images: [], // { id, img, name, origW, origH, x, y, w, h, hasLeak, leakDataUrl }
+            selectedId: null,
+            isScaleLocked: false,
+            lockedPxPerCm: null
+        };
+
+        // DOM Elements
+        const workspace = document.getElementById('workspace');
+        const bgImgEl = document.getElementById('bg-img');
+        const bgFile = document.getElementById('bg-file');
+        const bgColor = document.getElementById('bg-color');
+        const btnClearBg = document.getElementById('btn-clear-bg');
+        const canvasFrame = document.getElementById('canvas-frame');
+        const frameDragArea = document.getElementById('frame-drag-area');
+        const frameResize = document.getElementById('frame-resize');
+        const layersContainer = document.getElementById('layers-container');
+        const layersList = document.getElementById('layers-list');
+        const emptyLayersMsg = document.getElementById('empty-layers-msg');
+        const guideText = document.getElementById('guide-text');
+        
+        const inputCmW = document.getElementById('input-cm-w');
+        const inputCmH = document.getElementById('input-cm-h');
+        const inputTargetDpi = document.getElementById('input-target-dpi');
+
+        // Utils
+        const CM_TO_INCH = 1 / 2.54;
+        
+        // 画面上の枠のピクセル幅から、1cmあたりのピクセル密度を動的に計算
+        const getPixelsPerCm = () => {
+            if (state.isScaleLocked && state.lockedPxPerCm) {
+                return state.lockedPxPerCm;
+            }
+            const frameW = parseFloat(canvasFrame.style.width) || 300;
+            return frameW / state.cmW;
+        };
+
+        // ====== 1. 背景画像の設定 ======
+        bgFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                bgImgEl.src = url;
+                bgImgEl.style.display = 'block';
+                workspace.style.backgroundImage = 'none'; // 画像配置時は模様を消す
+                btnClearBg.classList.remove('hidden');
+                guideText.style.display = 'none';
+            }
+        });
+
+        bgColor.addEventListener('input', (e) => {
+            workspace.style.backgroundImage = 'none';
+            workspace.style.backgroundColor = e.target.value;
+            btnClearBg.classList.remove('hidden');
+            guideText.style.display = 'none';
+        });
+
+        btnClearBg.addEventListener('click', () => {
+            bgImgEl.src = '';
+            bgImgEl.style.display = 'none';
+            bgFile.value = '';
+            
+            workspace.style.backgroundImage = ''; // 格子模様を復活
+            workspace.style.backgroundColor = '';
+            bgColor.value = '#f8fafc';
+
+            btnClearBg.classList.add('hidden');
+            if(state.images.length === 0) guideText.style.display = 'flex';
+        });
+
+        // ====== 2. 枠（キャンバス）の操作 ======
+        // 左パネルのcm設定変更時
+        const handleCmInput = () => {
+            state.cmW = Number(inputCmW.value) || 1;
+            state.cmH = Number(inputCmH.value) || 1;
+            
+            if (state.isScaleLocked && state.lockedPxPerCm) {
+                // 固定時: 枠のピクセルサイズが変動する
+                canvasFrame.style.width = (state.cmW * state.lockedPxPerCm) + 'px';
+                canvasFrame.style.height = (state.cmH * state.lockedPxPerCm) + 'px';
+            } else {
+                // 未固定時: 枠のピクセル幅は維持して高さを比率で変更する
+                const currentW = parseFloat(canvasFrame.style.width) || 300;
+                const ratio = state.cmH / state.cmW;
+                canvasFrame.style.height = (currentW * ratio) + 'px';
+            }
+            
+            updateLayersListDOM();
+            renderLayers(); // 画像のDPIラベル等更新のため
+        };
+        inputCmW.addEventListener('input', handleCmInput);
+        inputCmH.addEventListener('input', handleCmInput);
+
+        // スケール固定ボタンの処理
+        const btnLockScale = document.getElementById('btn-lock-scale');
+        const iconUnlock = document.getElementById('icon-unlock');
+        const iconLock = document.getElementById('icon-lock');
+        const textLockScale = document.getElementById('text-lock-scale');
+        const descLockScale = document.getElementById('desc-lock-scale');
+
+        btnLockScale.addEventListener('click', () => {
+            state.isScaleLocked = !state.isScaleLocked;
+            
+            if (state.isScaleLocked) {
+                // ロックした瞬間のスケールを保存
+                const frameW = parseFloat(canvasFrame.style.width) || 300;
+                state.lockedPxPerCm = frameW / state.cmW;
+                
+                btnLockScale.className = "w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all border mb-2 bg-gradient-to-b from-blue-50 to-blue-100 border-blue-400 text-blue-700 shadow-inner";
+                
+                iconUnlock.classList.add('hidden');
+                iconLock.classList.remove('hidden');
+                textLockScale.textContent = '縮尺固定中';
+                descLockScale.textContent = '枠のサイズを変更すると、実寸(cm)も連動して変動します。';
+            } else {
+                state.lockedPxPerCm = null;
+                
+                btnLockScale.className = "w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all border mb-2 bg-gradient-to-b from-white to-slate-50 hover:to-slate-100 text-slate-700 border-slate-200 shadow-sm active:scale-95";
+                
+                iconLock.classList.add('hidden');
+                iconUnlock.classList.remove('hidden');
+                textLockScale.textContent = '縮尺(スケール)を固定する';
+                descLockScale.textContent = '背景画像に合わせて枠を調整後、「固定」してください。';
+            }
+            
+            updateLayersListDOM();
+            renderLayers();
+        });
+
+        // 枠の移動 (ドラッグ)
+        let isDraggingFrame = false;
+        let startX, startY, startFrameX, startFrameY;
+
+        frameDragArea.addEventListener('mousedown', (e) => {
+            if(e.target !== frameDragArea) return; // 画像クリック時は無視
+            isDraggingFrame = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startFrameX = parseFloat(canvasFrame.style.left) || 0;
+            startFrameY = parseFloat(canvasFrame.style.top) || 0;
+            state.selectedId = null; // 枠操作時は画像選択解除
+            renderLayers();
+            updateLayersListDOM();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isDraggingFrame) {
+                canvasFrame.style.left = (startFrameX + e.clientX - startX) + 'px';
+                canvasFrame.style.top = (startFrameY + e.clientY - startY) + 'px';
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDraggingFrame = false;
+        });
+
+        // 枠のリサイズ
+        let isResizingFrame = false;
+        let startFrameW, startFrameH;
+        frameResize.addEventListener('mousedown', (e) => {
+            isResizingFrame = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startFrameW = parseFloat(canvasFrame.style.width);
+            startFrameH = parseFloat(canvasFrame.style.height);
+            e.stopPropagation();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isResizingFrame) {
+                if (state.isScaleLocked && state.lockedPxPerCm) {
+                    // 固定時: 縦横自由にリサイズし、cmがそれに連動して変動する
+                    const newW = Math.max(50, startFrameW + (e.clientX - startX));
+                    const newH = Math.max(50, startFrameH + (e.clientY - startY));
+                    
+                    canvasFrame.style.width = newW + 'px';
+                    canvasFrame.style.height = newH + 'px';
+                    
+                    state.cmW = newW / state.lockedPxPerCm;
+                    state.cmH = newH / state.lockedPxPerCm;
+                    inputCmW.value = (Math.round(state.cmW * 10) / 10).toFixed(1);
+                    inputCmH.value = (Math.round(state.cmH * 10) / 10).toFixed(1);
+                } else {
+                    // 未固定時: 実寸(cm)の比率を維持したまま、見た目のピクセルサイズだけを変更する
+                    const newW = Math.max(50, startFrameW + (e.clientX - startX));
+                    const ratio = state.cmH / state.cmW;
+                    const newH = newW * ratio;
+                    
+                    canvasFrame.style.width = newW + 'px';
+                    canvasFrame.style.height = newH + 'px';
+                }
+                
+                updateLayersListDOM();
+                renderLayers(); // 枠のサイズが変わると画像の解像度(dpi)も変わるため再描画
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            isResizingFrame = false;
+        });
+
+        // ====== 3. 画像の追加・操作 ======
+        // ドラッグ＆ドロップ対応
+        workspace.addEventListener('dragover', e => e.preventDefault());
+        workspace.addEventListener('drop', e => {
+            e.preventDefault();
+            guideText.style.display = 'none';
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            files.forEach(file => {
+                const url = URL.createObjectURL(file);
+                const img = new Image();
+                img.onload = () => {
+                    const frameW = parseFloat(canvasFrame.style.width);
+                    const frameH = parseFloat(canvasFrame.style.height);
+                    
+                    // 初期サイズ（枠の80%または元サイズ）
+                    let startW = frameW * 0.8;
+                    if (startW > img.width) startW = img.width;
+                    const startH = startW * (img.height / img.width);
+
+                    const newImg = {
+                        id: Date.now() + Math.random(),
+                        name: file.name,
+                        img: img,
+                        origW: img.width,
+                        origH: img.height,
+                        x: (frameW - startW) / 2, // 枠の中央に配置
+                        y: (frameH - startH) / 2,
+                        w: startW,
+                        h: startH,
+                        hasLeak: false,
+                        leakDataUrl: null
+                    };
+                    state.images.push(newImg);
+                    state.selectedId = newImg.id;
+                    
+                    // スキャン結果リセット
+                    document.getElementById('scan-result').classList.add('hidden');
+                    
+                    renderLayers();
+                    updateLayersListDOM();
+                };
+                img.src = url;
+            });
+        });
+
+        // 画像の描画とイベント設定
+        function selectLayer(id) {
+            if (state.selectedId === id) return; 
+            state.selectedId = id;
+            renderLayers();
+            updateLayersListDOM();
+        }
+
+        function renderLayers() {
+            layersContainer.innerHTML = '';
+            if (state.images.length === 0) {
+                emptyLayersMsg.style.display = 'block';
+            } else {
+                emptyLayersMsg.style.display = 'none';
+            }
+
+            state.images.forEach(layer => {
+                const div = document.createElement('div');
+                div.className = `absolute pointer-events-auto group ${state.selectedId === layer.id ? 'ring-[3px] ring-blue-400/80 shadow-lg' : ''}`;
+                div.style.left = layer.x + 'px';
+                div.style.top = layer.y + 'px';
+                div.style.width = layer.w + 'px';
+                div.style.height = layer.h + 'px';
+                
+                // 画像本体
+                const imgEl = document.createElement('img');
+                imgEl.src = layer.img.src;
+                imgEl.className = 'w-full h-full object-contain pointer-events-none block';
+                div.appendChild(imgEl);
+
+                // 透過漏れハイライト
+                if (layer.leakDataUrl) {
+                    const leakEl = document.createElement('img');
+                    leakEl.src = layer.leakDataUrl;
+                    leakEl.className = 'absolute inset-0 w-full h-full object-contain pointer-events-none mix-blend-normal opacity-90';
+                    leakEl.style.filter = 'drop-shadow(0 0 3px red)';
+                    div.appendChild(leakEl);
+                }
+
+                const pxPerCm = getPixelsPerCm();
+
+                // DPIラベル（キャンバス上の画像ごとに表示）
+                const realWidthCm = layer.w / pxPerCm;
+                const realWidthInch = realWidthCm * CM_TO_INCH;
+                const dpi = Math.round(layer.origW / realWidthInch);
+                const isOk = dpi >= state.targetDpi;
+                
+                const dpiLabel = document.createElement('div');
+                dpiLabel.className = `absolute top-1 left-1 px-1.5 py-0.5 text-[11px] font-bold rounded shadow-sm border ${isOk ? 'bg-green-100/90 text-green-800 border-green-300' : 'bg-red-100/90 text-red-800 border-red-300'} pointer-events-none z-20 backdrop-blur-sm`;
+                dpiLabel.innerHTML = `${dpi} <span class="text-[9px] font-normal">dpi</span>`;
+                div.appendChild(dpiLabel);
+
+                // 画像の移動 (ドラッグ)
+                div.addEventListener('mousedown', (e) => {
+                    selectLayer(layer.id);
+                    
+                    let isDraggingImg = true;
+                    let sX = e.clientX;
+                    let sY = e.clientY;
+                    let sLayerX = layer.x;
+                    let sLayerY = layer.y;
+
+                    const onMove = (me) => {
+                        if (!isDraggingImg) return;
+                        layer.x = sLayerX + (me.clientX - sX);
+                        layer.y = sLayerY + (me.clientY - sY);
+                        div.style.left = layer.x + 'px';
+                        div.style.top = layer.y + 'px';
+                        
+                        // プロパティパネルを直接更新 (DOM再構築を防ぎスムーズに移動)
+                        const currentPxPerCm = getPixelsPerCm();
+                        const inputX = document.getElementById(`input-x-${layer.id}`);
+                        const inputY = document.getElementById(`input-y-${layer.id}`);
+                        if (inputX) inputX.value = (layer.x / currentPxPerCm).toFixed(1);
+                        if (inputY) inputY.value = (layer.y / currentPxPerCm).toFixed(1);
+                    };
+                    const onUp = () => {
+                        isDraggingImg = false;
+                        window.removeEventListener('mousemove', onMove);
+                        window.removeEventListener('mouseup', onUp);
+                    };
+                    window.addEventListener('mousemove', onMove);
+                    window.addEventListener('mouseup', onUp);
+                    e.stopPropagation(); // 枠のドラッグを発火させない
+                });
+
+                // 画像のリサイズハンドル
+                if (state.selectedId === layer.id) {
+                    const handles = ['nw', 'ne', 'sw', 'se'];
+                    handles.forEach(pos => {
+                        const handle = document.createElement('div');
+                        let posClasses = '';
+                        let cursor = '';
+                        if (pos === 'nw') { posClasses = '-left-2 -top-2'; cursor = 'cursor-nwse-resize'; }
+                        if (pos === 'ne') { posClasses = '-right-2 -top-2'; cursor = 'cursor-nesw-resize'; }
+                        if (pos === 'sw') { posClasses = '-left-2 -bottom-2'; cursor = 'cursor-nesw-resize'; }
+                        if (pos === 'se') { posClasses = '-right-2 -bottom-2'; cursor = 'cursor-nwse-resize'; }
+
+                        handle.className = `absolute ${posClasses} w-5 h-5 bg-white border-[3px] border-blue-500 rounded-full z-10 ${cursor} shadow-sm`;
+                        
+                        handle.addEventListener('mousedown', (e) => {
+                            e.stopPropagation();
+                            let isResizingImg = true;
+                            let sX = e.clientX;
+                            let sY = e.clientY;
+                            let sLayerW = layer.w;
+                            let sLayerH = layer.h;
+                            let sLayerX = layer.x;
+                            let sLayerY = layer.y;
+                            let ratio = layer.origH / layer.origW;
+                            
+                            const onMove = (me) => {
+                                if (!isResizingImg) return;
+                                const dx = me.clientX - sX;
+                                const dy = me.clientY - sY;
+                                
+                                let newW = sLayerW;
+                                let newH = sLayerH;
+                                let newX = sLayerX;
+                                let newY = sLayerY;
+
+                                if (pos === 'se') {
+                                    newW = Math.max(20, sLayerW + dx);
+                                    newH = newW * ratio;
+                                } else if (pos === 'sw') {
+                                    newW = Math.max(20, sLayerW - dx);
+                                    newH = newW * ratio;
+                                    newX = sLayerX + (sLayerW - newW);
+                                } else if (pos === 'ne') {
+                                    newW = Math.max(20, sLayerW + dx);
+                                    newH = newW * ratio;
+                                    newY = sLayerY + (sLayerH - newH);
+                                } else if (pos === 'nw') {
+                                    newW = Math.max(20, sLayerW - dx);
+                                    newH = newW * ratio;
+                                    newX = sLayerX + (sLayerW - newW);
+                                    newY = sLayerY + (sLayerH - newH);
+                                }
+
+                                layer.w = newW;
+                                layer.h = newH;
+                                layer.x = newX;
+                                layer.y = newY;
+                                
+                                div.style.width = layer.w + 'px';
+                                div.style.height = layer.h + 'px';
+                                div.style.left = layer.x + 'px';
+                                div.style.top = layer.y + 'px';
+                                
+                                const currentPxPerCm = getPixelsPerCm();
+
+                                // リアルタイムDPI表示の更新
+                                const currentRealWidthCm = layer.w / currentPxPerCm;
+                                const currentDpi = Math.round(layer.origW / (currentRealWidthCm * CM_TO_INCH));
+                                const currentIsOk = currentDpi >= state.targetDpi;
+                                dpiLabel.className = `absolute top-1 left-1 px-1.5 py-0.5 text-[11px] font-bold rounded shadow-sm border ${currentIsOk ? 'bg-green-100/90 text-green-800 border-green-300' : 'bg-red-100/90 text-red-800 border-red-300'} pointer-events-none z-20 backdrop-blur-sm`;
+                                dpiLabel.innerHTML = `${currentDpi} <span class="text-[9px] font-normal">dpi</span>`;
+
+                                // プロパティパネルを直接更新 (DOM再構築を防ぎスムーズにリサイズ)
+                                const inputX = document.getElementById(`input-x-${layer.id}`);
+                                const inputY = document.getElementById(`input-y-${layer.id}`);
+                                const inputW = document.getElementById(`input-w-${layer.id}`);
+                                const inputH = document.getElementById(`input-h-${layer.id}`);
+                                const listDpi = document.getElementById(`list-dpi-${layer.id}`);
+
+                                if (inputX) inputX.value = (layer.x / currentPxPerCm).toFixed(1);
+                                if (inputY) inputY.value = (layer.y / currentPxPerCm).toFixed(1);
+                                if (inputW) inputW.value = (layer.w / currentPxPerCm).toFixed(1);
+                                if (inputH) inputH.value = (layer.h / currentPxPerCm).toFixed(1);
+
+                                if (listDpi) {
+                                    listDpi.className = `font-mono font-bold flex items-center gap-1 ${currentIsOk ? 'text-emerald-600' : 'text-red-500'}`;
+                                    listDpi.innerHTML = `${currentIsOk ? '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>' : '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>'} ${currentDpi} dpi`;
+                                }
+                            };
+                            const onUp = () => {
+                                isResizingImg = false;
+                                window.removeEventListener('mousemove', onMove);
+                                window.removeEventListener('mouseup', onUp);
+                            };
+                            window.addEventListener('mousemove', onMove);
+                            window.addEventListener('mouseup', onUp);
+                        });
+                        div.appendChild(handle);
+                    });
+                }
+
+                layersContainer.appendChild(div);
+            });
+        }
+
+        // 右パネルのリスト更新 ＆ DPI計算
+        inputTargetDpi.addEventListener('input', () => {
+            state.targetDpi = Number(inputTargetDpi.value) || 200;
+            updateLayersListDOM();
+            renderLayers(); // 画像上のラベル色も更新
+        });
+
+        function updateLayersListDOM() {
+            // emptyMsg以外の要素を削除
+            Array.from(layersList.children).forEach(child => {
+                if(child.id !== 'empty-layers-msg') child.remove();
+            });
+
+            const pxPerCm = getPixelsPerCm();
+
+            state.images.forEach(layer => {
+                // DPI計算： (元のピクセル幅) / (実際の印刷インチ幅)
+                const realWidthCm = layer.w / pxPerCm;
+                const realWidthInch = realWidthCm * CM_TO_INCH;
+                const dpi = Math.round(layer.origW / realWidthInch);
+                const isOk = dpi >= state.targetDpi;
+
+                // cm単位の座標とサイズ
+                const cmX = (layer.x / pxPerCm).toFixed(1);
+                const cmY = (layer.y / pxPerCm).toFixed(1);
+                const cmW = (layer.w / pxPerCm).toFixed(1);
+                const cmH = (layer.h / pxPerCm).toFixed(1);
+
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `p-3.5 rounded-xl border ${state.selectedId === layer.id ? 'bg-blue-50/80 border-blue-400 shadow-md ring-1 ring-blue-400/20' : 'bg-white/80 border-slate-200 shadow-sm hover:border-blue-300 hover:shadow'} transition-all cursor-pointer group backdrop-blur-sm`;
+                itemDiv.onclick = () => {
+                    selectLayer(layer.id);
+                };
+
+                itemDiv.innerHTML = `
+                    <div class="flex justify-between items-start mb-2.5">
+                        <p class="text-sm font-bold text-slate-700 truncate pr-2">${layer.name}</p>
+                        <button class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1 rounded transition-all opacity-0 group-hover:opacity-100" onclick="removeLayer(${layer.id}, event)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-4 gap-1.5 mb-3 text-xs" onclick="event.stopPropagation()">
+                        <div class="flex flex-col">
+                            <span class="text-[9px] font-bold text-slate-400 mb-0.5 ml-1">X (cm)</span>
+                            <input type="number" step="0.1" value="${cmX}" id="input-x-${layer.id}" onchange="updateLayerProp(${layer.id}, 'x', this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-md px-1 py-1.5 text-slate-700 font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 outline-none shadow-inner transition-all" />
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[9px] font-bold text-slate-400 mb-0.5 ml-1">Y (cm)</span>
+                            <input type="number" step="0.1" value="${cmY}" id="input-y-${layer.id}" onchange="updateLayerProp(${layer.id}, 'y', this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-md px-1 py-1.5 text-slate-700 font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 outline-none shadow-inner transition-all" />
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[9px] font-bold text-slate-400 mb-0.5 ml-1">W (cm)</span>
+                            <input type="number" step="0.1" value="${cmW}" id="input-w-${layer.id}" onchange="updateLayerProp(${layer.id}, 'w', this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-md px-1 py-1.5 text-slate-700 font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 outline-none shadow-inner transition-all" />
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[9px] font-bold text-slate-400 mb-0.5 ml-1">H (cm)</span>
+                            <input type="number" step="0.1" value="${cmH}" id="input-h-${layer.id}" onchange="updateLayerProp(${layer.id}, 'h', this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-md px-1 py-1.5 text-slate-700 font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 outline-none shadow-inner transition-all" />
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs pt-2.5 border-t border-slate-200/80">
+                        <span class="text-slate-500 font-medium">実寸解像度:</span>
+                        <span id="list-dpi-${layer.id}" class="font-mono font-bold flex items-center gap-1 ${isOk ? 'text-emerald-600' : 'text-red-500'}">
+                            ${isOk ? '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>' : '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>'}
+                            ${dpi} dpi
+                        </span>
+                    </div>
+                    ${layer.hasLeak ? `
+                        <div class="mt-3 text-xs flex items-center justify-between bg-red-50 px-2.5 py-2.5 rounded-lg cursor-pointer hover:bg-red-100 border border-red-200 text-red-600 transition-colors shadow-sm" onclick="openLeakInspector(${layer.id}, event)">
+                            <div class="flex items-center gap-1.5 font-bold">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+                                透過漏れを検知しました
+                            </div>
+                            <div class="flex items-center gap-1 text-red-500 font-medium">
+                                詳細表示
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+                layersList.appendChild(itemDiv);
+            });
+        }
+
+        window.removeLayer = (id, event) => {
+            event.stopPropagation();
+            state.images = state.images.filter(img => img.id !== id);
+            if (state.selectedId === id) state.selectedId = null;
+            renderLayers();
+            updateLayersListDOM();
+            if(state.images.length === 0 && !bgImgEl.src && workspace.style.backgroundColor === '') guideText.style.display = 'flex';
+        };
+
+        // プロパティ直接入力の処理
+        window.updateLayerProp = (id, prop, valStr) => {
+            const val = parseFloat(valStr);
+            if (isNaN(val)) return;
+            
+            const layer = state.images.find(img => img.id === id);
+            if (!layer) return;
+
+            const ratio = layer.origH / layer.origW;
+            const pxPerCm = getPixelsPerCm();
+            const pxVal = val * pxPerCm;
+
+            if (prop === 'x') layer.x = pxVal;
+            if (prop === 'y') layer.y = pxVal;
+            if (prop === 'w') {
+                layer.w = Math.max(20, pxVal);
+                layer.h = layer.w * ratio;
+            }
+            if (prop === 'h') {
+                layer.h = Math.max(20 * ratio, pxVal);
+                layer.w = layer.h / ratio;
+            }
+
+            renderLayers();
+            updateLayersListDOM();
+        };
+
+        // ====== 4. 透過漏れ検知ロジック ======
+        const scanTransparencyLeak = (imgObj, width, height) => {
+            const cvs = document.createElement('canvas');
+            cvs.width = width; cvs.height = height;
+            const ctx = cvs.getContext('2d');
+            ctx.drawImage(imgObj, 0, 0);
+            
+            const imgData = ctx.getImageData(0, 0, width, height);
+            const data = imgData.data;
+            let hasLeak = false;
+            
+            const overCvs = document.createElement('canvas');
+            overCvs.width = width; overCvs.height = height;
+            const overCtx = overCvs.getContext('2d');
+            const overImgData = overCtx.createImageData(width, height);
+            const od = overImgData.data;
+
+            // 1〜254のアルファ値を持つピクセルを黄色に塗る
+            for (let i = 0; i < data.length; i += 4) {
+                const a = data[i + 3];
+                if (a > 0 && a < 255) {
+                    hasLeak = true;
+                    od[i] = 255;     // R
+                    od[i + 1] = 255; // G
+                    od[i + 2] = 0;   // B
+                    od[i + 3] = 255; // A
+                }
+            }
+
+            if (hasLeak) {
+                overCtx.putImageData(overImgData, 0, 0);
+                return overCvs.toDataURL('image/png');
+            }
+            return null;
+        };
+
+        document.getElementById('btn-scan').addEventListener('click', async () => {
+            if (state.images.length === 0) return;
+            
+            const btn = document.getElementById('btn-scan');
+            btn.innerHTML = '<svg class="animate-spin w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> スキャン中...';
+            btn.classList.add('opacity-80', 'pointer-events-none');
+            
+            // UI更新を待つため少し遅延させる
+            await new Promise(r => setTimeout(r, 50));
+            
+            let totalLeaks = 0;
+            state.images.forEach(layer => {
+                const leakUrl = scanTransparencyLeak(layer.img, layer.origW, layer.origH);
+                layer.leakDataUrl = leakUrl;
+                layer.hasLeak = !!leakUrl;
+                if (leakUrl) totalLeaks++;
+            });
+            
+            renderLayers();
+            updateLayersListDOM();
+            
+            const resultDiv = document.getElementById('scan-result');
+            resultDiv.classList.remove('hidden');
+            if (totalLeaks > 0) {
+                resultDiv.className = 'mt-4 p-3.5 rounded-lg text-sm leading-relaxed bg-red-50 text-red-700 border border-red-200 shadow-inner font-medium';
+                resultDiv.innerHTML = `${totalLeaks}枚の画像から透過漏れ（半透明ゴミ）を検知しました。<br><span class="text-xs text-red-500 mt-1 block font-normal">※下のリストから詳細を確認できます。</span>`;
+            } else {
+                resultDiv.className = 'mt-4 p-3.5 rounded-lg text-sm leading-relaxed bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-inner font-medium';
+                resultDiv.innerHTML = `透過漏れは検知されませんでした。`;
+            }
+
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> 透過漏れをスキャン';
+            btn.classList.remove('opacity-80', 'pointer-events-none');
+        });
+
+        // ====== 4.5. 透過漏れ専用画面 (インスペクター) ======
+        const leakInspectorModal = document.getElementById('leak-inspector-modal');
+        const inspectorFileName = document.getElementById('inspector-file-name');
+        const inspectorOrigImg = document.getElementById('inspector-orig-img');
+        const inspectorLeakImg = document.getElementById('inspector-leak-img');
+        const btnCloseInspector = document.getElementById('btn-close-inspector');
+
+        window.openLeakInspector = (id, event) => {
+            event.stopPropagation();
+            const layer = state.images.find(img => img.id === id);
+            if (!layer || !layer.hasLeak) return;
+
+            inspectorFileName.textContent = layer.name;
+            inspectorOrigImg.src = layer.img.src;
+            inspectorLeakImg.src = layer.leakDataUrl;
+
+            // モーダル表示
+            leakInspectorModal.classList.remove('hidden');
+        };
+
+        btnCloseInspector.addEventListener('click', () => {
+            leakInspectorModal.classList.add('hidden');
+            // メモリ解放のためsrcをクリア
+            inspectorOrigImg.src = '';
+            inspectorLeakImg.src = '';
+        });
+
+        // ====== 4.6. マニュアル表示 ======
+        const manualModal = document.getElementById('manual-modal');
+        const btnShowManual = document.getElementById('btn-show-manual');
+        const btnCloseManual = document.getElementById('btn-close-manual');
+        const btnCloseManualBottom = document.getElementById('btn-close-manual-bottom');
+
+        btnShowManual.addEventListener('click', () => {
+            manualModal.classList.remove('hidden');
+        });
+
+        const closeManual = () => {
+            manualModal.classList.add('hidden');
+        };
+
+        btnCloseManual.addEventListener('click', closeManual);
+        btnCloseManualBottom.addEventListener('click', closeManual);
+        
+        // モーダルの外側をクリックで閉じる
+        manualModal.addEventListener('click', (e) => {
+            if (e.target === manualModal) closeManual();
+        });
+
+
+        // ====== 5. 入稿用PNG出力 ======
+        // パターンA：枠内のみ（入稿用素材）高解像度出力
+        document.getElementById('btn-export-print').addEventListener('click', () => {
+            if (state.images.length === 0) return alert("枠内に画像がありません。");
+            
+            // 出力サイズ（350dpi換算のピクセル数）
+            const pxW = Math.round((state.cmW * CM_TO_INCH) * state.exportDpi);
+            const pxH = Math.round((state.cmH * CM_TO_INCH) * state.exportDpi);
+            
+            const cvs = document.createElement('canvas');
+            cvs.width = pxW;
+            cvs.height = pxH;
+            const ctx = cvs.getContext('2d');
+            
+            const frameW = parseFloat(canvasFrame.style.width);
+            const scale = pxW / frameW;
+
+            // 背景画像は含めず、枠内の画像のみを描画
+            state.images.forEach(layer => {
+                ctx.drawImage(
+                    layer.img, 
+                    layer.x * scale, 
+                    layer.y * scale, 
+                    layer.w * scale, 
+                    layer.h * scale
+                );
+            });
+
+            const link = document.createElement('a');
+            link.download = `PrintData_${state.cmW}x${state.cmH}cm_${state.exportDpi}dpi.png`;
+            link.href = cvs.toDataURL('image/png');
+            link.click();
+        });
+
+        // パターンB：背景ごと（モックアップ）出力
+        document.getElementById('btn-export-mockup').addEventListener('click', () => {
+            // 画面のワークスペース全体をキャプチャするイメージ
+            const wsRect = workspace.getBoundingClientRect();
+            const scale = 2; // 高画質化のため2倍スケールで描画
+            
+            const cvs = document.createElement('canvas');
+            cvs.width = wsRect.width * scale;
+            cvs.height = wsRect.height * scale;
+            const ctx = cvs.getContext('2d');
+
+            // 1. 背景色の描画
+            const defaultBgColor = '#f8fafc';
+            ctx.fillStyle = workspace.style.backgroundColor || bgColor.value || defaultBgColor;
+            ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+            // 2. 背景画像の描画（中央配置）
+            if (bgImgEl.src && bgImgEl.style.display !== 'none') {
+                const imgW = bgImgEl.naturalWidth;
+                const imgH = bgImgEl.naturalHeight;
+                const cx = wsRect.width / 2;
+                const cy = wsRect.height / 2;
+                ctx.drawImage(
+                    bgImgEl, 
+                    (cx - imgW / 2) * scale, 
+                    (cy - imgH / 2) * scale, 
+                    imgW * scale, 
+                    imgH * scale
+                );
+            }
+
+            // 3. 配置画像の描画（枠の範囲でクリッピングしてはみ出しを隠す）
+            const frameLeft = parseFloat(canvasFrame.style.left) || 0;
+            const frameTop = parseFloat(canvasFrame.style.top) || 0;
+            const frameW = parseFloat(canvasFrame.style.width) || 0;
+            const frameH = parseFloat(canvasFrame.style.height) || 0;
+
+            ctx.save(); // クリッピング前の状態を保存
+            ctx.beginPath();
+            ctx.rect(frameLeft * scale, frameTop * scale, frameW * scale, frameH * scale);
+            ctx.clip(); // 枠の範囲外をマスクする
+
+            state.images.forEach(layer => {
+                const absX = frameLeft + layer.x;
+                const absY = frameTop + layer.y;
+                ctx.drawImage(
+                    layer.img, 
+                    absX * scale, 
+                    absY * scale, 
+                    layer.w * scale, 
+                    layer.h * scale
+                );
+            });
+            
+            ctx.restore(); // クリッピング解除
+
+            const link = document.createElement('a');
+            link.download = `Mockup_${Date.now()}.png`;
+            link.href = cvs.toDataURL('image/png');
+            link.click();
+        });
+
+        // 背景クリックで選択解除
+        workspace.addEventListener('mousedown', (e) => {
+            if (e.target === workspace || e.target === guideText || e.target === bgImgEl || e.target === frameDragArea) {
+                selectLayer(null);
+            }
+        });
+
+    </script>
+</body>
+</html>
