@@ -1392,12 +1392,33 @@
             return /\.png$/i.test(safe) ? safe : `${safe}.png`;
         };
 
+        // 既定ファイル名を「品番_ボディ名_素材ファイル名」形式で組み立てる
+        // ボディ未選択 / 素材なしのセグメントはスキップし、何も埋まらない場合は fallback を返す
+        const buildDefaultName = (fallback) => {
+            const parts = [];
+            if (state.selectedBodyId != null) {
+                const body = state.bodies.find(b => b.id === state.selectedBodyId);
+                if (body) {
+                    if (body.partNumber) parts.push(body.partNumber);
+                    if (body.name) parts.push(body.name);
+                }
+            }
+            if (state.images.length > 0) {
+                const matNames = state.images
+                    .map(img => (img.name || '').replace(/\.[^.]+$/, ''))
+                    .filter(n => n.length > 0);
+                if (matNames.length > 0) parts.push(matNames.join('_'));
+            }
+            if (parts.length === 0) return fallback;
+            return parts.join('_') + '.png';
+        };
+
         // パターンA：枠内のみ（入稿用素材）高解像度出力
         document.getElementById('btn-export-print').addEventListener('click', () => {
             if (state.images.length === 0) return alert("枠内に画像がありません。");
 
-            const defaultName = `PrintData_${state.cmW}x${state.cmH}cm_${state.exportDpi}dpi.png`;
-            const fileName = promptFileName(defaultName);
+            const fallback = `PrintData_${state.cmW}x${state.cmH}cm_${state.exportDpi}dpi.png`;
+            const fileName = promptFileName(buildDefaultName(fallback));
             if (!fileName) return;
 
             // 出力サイズ（350dpi換算のピクセル数）
@@ -1431,8 +1452,8 @@
 
         // パターンB：背景ごと（モックアップ）出力
         document.getElementById('btn-export-mockup').addEventListener('click', () => {
-            const defaultName = `Mockup_${Date.now()}.png`;
-            const fileName = promptFileName(defaultName);
+            const fallback = `Mockup_${Date.now()}.png`;
+            const fileName = promptFileName(buildDefaultName(fallback));
             if (!fileName) return;
 
             // 画面のワークスペース全体をキャプチャするイメージ
