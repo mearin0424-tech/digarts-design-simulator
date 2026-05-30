@@ -69,6 +69,12 @@
                         </span>
                         <input type="file" id="bg-file" accept="image/*" class="hidden">
                     </label>
+                    <button id="btn-open-body" class="block w-full text-center px-4 py-2.5 bg-white border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 rounded-lg text-sm font-medium cursor-pointer transition-all shadow-sm active:scale-95">
+                        <span class="flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                            ボディから選択
+                        </span>
+                    </button>
                     <div id="bg-scale-container" class="hidden items-center justify-between px-3 py-2 bg-white/70 border border-slate-200 rounded-lg shadow-sm backdrop-blur-sm">
                         <span class="text-slate-600 font-medium text-xs">画像サイズ</span>
                         <input type="range" id="bg-scale" min="5" max="300" value="100" class="w-24 accent-blue-500 cursor-pointer">
@@ -80,6 +86,7 @@
                         </div>
                     </div>
                 </div>
+                <div id="selected-body-badge" class="hidden mt-2 px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg text-xs items-center gap-2 overflow-hidden"></div>
                 <button id="btn-clear-bg" class="mt-3 w-full text-xs font-medium text-slate-400 hover:text-red-500 text-right hidden transition-colors">背景を初期化</button>
             </div>
 
@@ -112,12 +119,16 @@
 
             <div>
                 <h2 class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider flex items-center gap-2">
-                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> 3. 品質チェック基準
+                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> 3. 素材画像をアップロード
                 </h2>
-                <div class="relative mt-2">
-                    <label class="text-[10px] text-slate-400 mb-1 block absolute -top-2 left-2 bg-white px-1 font-bold z-10">警告を出す最低解像度 (dpi)</label>
-                    <input type="number" id="input-target-dpi" value="200" class="w-full bg-white/80 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-inner transition-all relative z-0">
-                </div>
+                <label class="block w-full text-center px-4 py-2.5 bg-white border border-slate-200 hover:border-emerald-300 hover:text-emerald-600 rounded-lg text-sm font-medium cursor-pointer transition-all shadow-sm active:scale-95">
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        画像を選択
+                    </span>
+                    <input type="file" id="layer-file" accept="image/*" multiple class="hidden">
+                </label>
+                <p class="text-xs text-slate-400 mt-2 leading-relaxed">複数選択可。中央のワークスペースへドラッグ＆ドロップでも追加できます。</p>
             </div>
         </aside>
 
@@ -155,7 +166,16 @@
 
         <!-- Right Sidebar (グラスモーフィズム) -->
         <aside class="w-80 bg-white/40 backdrop-blur-xl border-l border-white/60 shadow-[-4px_0_24px_rgba(0,0,0,0.02)] flex flex-col z-10">
-            <div class="p-5 border-b border-slate-200/60">
+            <div class="p-5 border-b border-slate-200/60 space-y-4">
+                <div>
+                    <h2 class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider flex items-center gap-2">
+                        <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> 品質チェック基準
+                    </h2>
+                    <div class="relative">
+                        <label class="text-[10px] text-slate-400 mb-1 block absolute -top-2 left-2 bg-white px-1 font-bold z-10">警告を出す最低解像度 (dpi)</label>
+                        <input type="number" id="input-target-dpi" value="200" class="w-full bg-white/80 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-inner transition-all relative z-0">
+                    </div>
+                </div>
                 <button id="btn-scan" class="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-b from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-white rounded-lg font-bold transition-all border border-orange-400/50 shadow-[0_4px_12px_rgba(249,115,22,0.3)] hover:shadow-[0_6px_16px_rgba(249,115,22,0.4)] active:scale-95">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                     透過漏れをスキャン
@@ -291,6 +311,88 @@
         </div>
     </div>
 
+    <!-- ボディ管理モーダル -->
+    <div id="body-modal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex flex-col items-center justify-center p-6 sm:p-12 transition-opacity duration-300">
+        <div class="w-full max-w-3xl bg-white border border-slate-200 rounded-2xl shadow-2xl flex flex-col max-h-full overflow-hidden">
+            <div class="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-lg shadow-sm">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                    </div>
+                    <h2 class="text-xl font-extrabold text-slate-800 tracking-wide">
+                        ボディ管理
+                    </h2>
+                </div>
+                <button id="btn-close-body" class="text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 p-2 rounded-full transition-all border border-slate-200 shadow-sm active:scale-95">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto bg-white">
+                <!-- 一覧ビュー -->
+                <div id="body-list-view">
+                    <div class="flex justify-between items-center mb-4">
+                        <p class="text-sm text-slate-500">登録済み: <span id="body-count" class="font-bold text-slate-700">0</span>件</p>
+                        <button id="btn-body-new" class="flex items-center gap-2 px-4 py-2 bg-gradient-to-b from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white rounded-lg text-sm font-bold transition-all shadow-md active:scale-95">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            新規登録
+                        </button>
+                    </div>
+                    <div id="body-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                    <div id="body-empty" class="text-center py-12 text-slate-400 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                        まだボディが登録されていません。<br>「新規登録」から品番・名前を入力してください。
+                    </div>
+                </div>
+
+                <!-- 登録/編集フォーム -->
+                <div id="body-form-view" class="hidden">
+                    <div class="flex items-center gap-2 mb-5">
+                        <button id="btn-body-back" class="text-slate-500 hover:text-slate-700 p-1.5 rounded-md hover:bg-slate-100 transition-colors">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                        </button>
+                        <h3 id="body-form-title" class="font-bold text-slate-800">新規登録</h3>
+                    </div>
+
+                    <div class="space-y-5">
+                        <div class="relative">
+                            <label class="text-[10px] text-slate-400 mb-1 block absolute -top-2 left-2 bg-white px-1 font-bold z-10">品番 <span class="text-red-500">*</span></label>
+                            <input type="text" id="body-input-pn" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-slate-800 font-medium outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 shadow-inner transition-all" placeholder="例: TS-001">
+                        </div>
+                        <div class="relative">
+                            <label class="text-[10px] text-slate-400 mb-1 block absolute -top-2 left-2 bg-white px-1 font-bold z-10">名前 <span class="text-red-500">*</span></label>
+                            <input type="text" id="body-input-name" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-slate-800 font-medium outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 shadow-inner transition-all" placeholder="例: Tシャツ（ホワイト・Lサイズ）">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 mb-2 block">画像（任意）</label>
+                            <div class="flex items-start gap-3">
+                                <div id="body-image-preview" class="w-24 h-24 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center text-xs text-slate-400 overflow-hidden flex-shrink-0">
+                                    未設定
+                                </div>
+                                <div class="flex-1 flex flex-col gap-2">
+                                    <label class="block w-full text-center px-4 py-2 bg-white border border-slate-200 hover:border-blue-300 hover:text-blue-600 rounded-lg text-sm font-medium cursor-pointer transition-all shadow-sm active:scale-95">
+                                        画像を選択
+                                        <input type="file" id="body-input-image" accept="image/*" class="hidden">
+                                    </label>
+                                    <button id="btn-body-image-clear" class="text-xs text-slate-400 hover:text-red-500 hidden transition-colors text-left">画像を削除</button>
+                                    <p class="text-[10px] text-slate-400 leading-relaxed">画像はブラウザ内にのみ保存されます。大きすぎる画像は保存に失敗することがあります。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-100">
+                        <button id="btn-body-cancel" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-bold hover:bg-slate-50 transition-all shadow-sm active:scale-95">
+                            キャンセル
+                        </button>
+                        <button id="btn-body-save" class="px-5 py-2.5 bg-gradient-to-b from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white rounded-lg text-sm font-bold transition-all shadow-md active:scale-95">
+                            保存
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Application Logic -->
     <script>
         const state = {
@@ -302,7 +404,11 @@
             selectedId: null,
             isScaleLocked: false,
             lockedPxPerCm: null,
-            bgScale: 1
+            bgScale: 1,
+            bodies: [],            // { id, partNumber, name, imageDataUrl?, createdAt }
+            selectedBodyId: null,  // 現在背景として適用中のボディID
+            bodyFormEditingId: null,
+            bodyFormImageSrc: null
         };
 
         // DOM Elements
@@ -338,38 +444,44 @@
         };
 
         // ====== 1. 背景画像の設定 ======
+        // 背景画像をsrc（dataURL or objectURL）から適用する共通処理
+        const applyBackgroundImage = (src) => {
+            bgImgEl.onload = () => {
+                // ワークスペースのサイズに合わせて初期スケールを計算
+                const wsRect = workspace.getBoundingClientRect();
+                const availableW = wsRect.width * 0.9;
+                const availableH = wsRect.height * 0.9;
+
+                const scaleX = availableW / bgImgEl.naturalWidth;
+                const scaleY = availableH / bgImgEl.naturalHeight;
+
+                // はみ出ないように最小のスケール値を採用（画像が十分小さい場合は1倍）
+                let initialScale = Math.min(scaleX, scaleY, 1);
+
+                state.bgScale = initialScale;
+                bgScaleInput.value = initialScale * 100;
+
+                bgImgEl.style.transform = `translate(-50%, -50%) scale(${state.bgScale})`;
+                bgImgEl.style.display = 'block';
+
+                // スライダーコンテナの表示
+                bgScaleContainer.classList.remove('hidden');
+                bgScaleContainer.classList.add('flex');
+
+                workspace.style.backgroundImage = 'none'; // 画像配置時は模様を消す
+                btnClearBg.classList.remove('hidden');
+                guideText.style.display = 'none';
+            };
+            bgImgEl.src = src;
+        };
+
         bgFile.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
-                const url = URL.createObjectURL(file);
-                bgImgEl.onload = () => {
-                    // ワークスペースのサイズに合わせて初期スケールを計算
-                    const wsRect = workspace.getBoundingClientRect();
-                    // ワークスペースの90%のサイズに収まるように計算
-                    const availableW = wsRect.width * 0.9;
-                    const availableH = wsRect.height * 0.9;
-                    
-                    const scaleX = availableW / bgImgEl.naturalWidth;
-                    const scaleY = availableH / bgImgEl.naturalHeight;
-                    
-                    // はみ出ないように最小のスケール値を採用（画像が十分小さい場合は1倍）
-                    let initialScale = Math.min(scaleX, scaleY, 1);
-                    
-                    state.bgScale = initialScale;
-                    bgScaleInput.value = initialScale * 100;
-                    
-                    bgImgEl.style.transform = `translate(-50%, -50%) scale(${state.bgScale})`;
-                    bgImgEl.style.display = 'block';
-                    
-                    // スライダーコンテナの表示
-                    bgScaleContainer.classList.remove('hidden');
-                    bgScaleContainer.classList.add('flex');
-                    
-                    workspace.style.backgroundImage = 'none'; // 画像配置時は模様を消す
-                    btnClearBg.classList.remove('hidden');
-                    guideText.style.display = 'none';
-                };
-                bgImgEl.src = url;
+                // ファイルから直接選択した場合はボディ選択を解除
+                state.selectedBodyId = null;
+                updateSelectedBodyBadge();
+                applyBackgroundImage(URL.createObjectURL(file));
             }
         });
 
@@ -390,16 +502,21 @@
             bgImgEl.src = '';
             bgImgEl.style.display = 'none';
             bgFile.value = '';
-            
+
             // スライダーを隠す
             bgScaleContainer.classList.add('hidden');
             bgScaleContainer.classList.remove('flex');
-            
+
             workspace.style.backgroundImage = ''; // 格子模様を復活
             workspace.style.backgroundColor = '';
             bgColor.value = '#f8fafc';
 
             btnClearBg.classList.add('hidden');
+
+            // ボディ選択もクリア
+            state.selectedBodyId = null;
+            updateSelectedBodyBadge();
+
             if(state.images.length === 0) guideText.style.display = 'flex';
         });
 
@@ -535,19 +652,18 @@
         });
 
         // ====== 3. 画像の追加・操作 ======
-        // ドラッグ＆ドロップ対応
-        workspace.addEventListener('dragover', e => e.preventDefault());
-        workspace.addEventListener('drop', e => {
-            e.preventDefault();
+        // 画像ファイル群を配置画像として追加する共通処理
+        const addImageFiles = (fileList) => {
+            const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+            if (files.length === 0) return;
             guideText.style.display = 'none';
-            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
             files.forEach(file => {
                 const url = URL.createObjectURL(file);
                 const img = new Image();
                 img.onload = () => {
                     const frameW = parseFloat(canvasFrame.style.width);
                     const frameH = parseFloat(canvasFrame.style.height);
-                    
+
                     // 初期サイズ（枠の80%または元サイズ）
                     let startW = frameW * 0.8;
                     if (startW > img.width) startW = img.width;
@@ -568,15 +684,29 @@
                     };
                     state.images.push(newImg);
                     state.selectedId = newImg.id;
-                    
+
                     // スキャン結果リセット
                     document.getElementById('scan-result').classList.add('hidden');
-                    
+
                     renderLayers();
                     updateLayersListDOM();
                 };
                 img.src = url;
             });
+        };
+
+        // ドラッグ＆ドロップ対応
+        workspace.addEventListener('dragover', e => e.preventDefault());
+        workspace.addEventListener('drop', e => {
+            e.preventDefault();
+            addImageFiles(e.dataTransfer.files);
+        });
+
+        // 左パネルからのファイル選択
+        const layerFileInput = document.getElementById('layer-file');
+        layerFileInput.addEventListener('change', (e) => {
+            addImageFiles(e.target.files);
+            e.target.value = ''; // 同じファイルを連続して選んでも再発火するように
         });
 
         // 画像の描画とイベント設定
@@ -1012,11 +1142,264 @@
         });
 
 
+        // ====== 4.7. ボディ管理 ======
+        const BODIES_STORAGE_KEY = 'digarts-design-simulator:bodies';
+
+        const escapeHtml = (str) => String(str ?? '').replace(/[&<>"']/g, (c) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+
+        const loadBodies = () => {
+            try {
+                const raw = localStorage.getItem(BODIES_STORAGE_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch {
+                return [];
+            }
+        };
+
+        const saveBodies = () => {
+            try {
+                localStorage.setItem(BODIES_STORAGE_KEY, JSON.stringify(state.bodies));
+                return true;
+            } catch (e) {
+                alert('ボディの保存に失敗しました。容量を超過している可能性があります。\n画像を小さくするか、不要なボディを削除してください。\n\n' + (e && e.message ? e.message : ''));
+                return false;
+            }
+        };
+
+        state.bodies = loadBodies();
+
+        // DOM参照
+        const bodyModal = document.getElementById('body-modal');
+        const btnOpenBody = document.getElementById('btn-open-body');
+        const btnCloseBody = document.getElementById('btn-close-body');
+        const bodyListView = document.getElementById('body-list-view');
+        const bodyFormView = document.getElementById('body-form-view');
+        const bodyListEl = document.getElementById('body-list');
+        const bodyEmptyEl = document.getElementById('body-empty');
+        const bodyCountEl = document.getElementById('body-count');
+        const btnBodyNew = document.getElementById('btn-body-new');
+        const btnBodyBack = document.getElementById('btn-body-back');
+        const btnBodyCancel = document.getElementById('btn-body-cancel');
+        const btnBodySave = document.getElementById('btn-body-save');
+        const bodyInputPn = document.getElementById('body-input-pn');
+        const bodyInputName = document.getElementById('body-input-name');
+        const bodyInputImage = document.getElementById('body-input-image');
+        const bodyImagePreview = document.getElementById('body-image-preview');
+        const btnBodyImageClear = document.getElementById('btn-body-image-clear');
+        const bodyFormTitle = document.getElementById('body-form-title');
+        const selectedBodyBadge = document.getElementById('selected-body-badge');
+
+        const openBodyModal = () => {
+            showBodyList();
+            bodyModal.classList.remove('hidden');
+        };
+        const closeBodyModal = () => bodyModal.classList.add('hidden');
+
+        const showBodyList = () => {
+            bodyListView.classList.remove('hidden');
+            bodyFormView.classList.add('hidden');
+            renderBodyList();
+        };
+
+        const showBodyForm = (editingId = null) => {
+            state.bodyFormEditingId = editingId;
+            bodyListView.classList.add('hidden');
+            bodyFormView.classList.remove('hidden');
+
+            if (editingId) {
+                const body = state.bodies.find(b => b.id === editingId);
+                if (body) {
+                    bodyFormTitle.textContent = '編集';
+                    bodyInputPn.value = body.partNumber;
+                    bodyInputName.value = body.name;
+                    state.bodyFormImageSrc = body.imageDataUrl || null;
+                }
+            } else {
+                bodyFormTitle.textContent = '新規登録';
+                bodyInputPn.value = '';
+                bodyInputName.value = '';
+                state.bodyFormImageSrc = null;
+            }
+            bodyInputImage.value = '';
+            updateBodyFormImagePreview();
+        };
+
+        const updateBodyFormImagePreview = () => {
+            if (state.bodyFormImageSrc) {
+                bodyImagePreview.innerHTML = `<img src="${state.bodyFormImageSrc}" class="w-full h-full object-contain" />`;
+                btnBodyImageClear.classList.remove('hidden');
+            } else {
+                bodyImagePreview.textContent = '未設定';
+                btnBodyImageClear.classList.add('hidden');
+            }
+        };
+
+        const renderBodyList = () => {
+            bodyListEl.innerHTML = '';
+            bodyCountEl.textContent = state.bodies.length;
+            if (state.bodies.length === 0) {
+                bodyEmptyEl.classList.remove('hidden');
+                bodyListEl.classList.add('hidden');
+                return;
+            }
+            bodyEmptyEl.classList.add('hidden');
+            bodyListEl.classList.remove('hidden');
+
+            state.bodies.forEach(body => {
+                const isSelected = state.selectedBodyId === body.id;
+                const card = document.createElement('div');
+                card.className = `p-3 border rounded-xl bg-white transition-all flex gap-3 ${isSelected ? 'border-indigo-400 ring-2 ring-indigo-400/20 shadow' : 'border-slate-200 hover:shadow-md hover:border-slate-300'}`;
+                card.innerHTML = `
+                    <div class="w-20 h-20 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        ${body.imageDataUrl
+                            ? `<img src="${body.imageDataUrl}" class="w-full h-full object-contain" />`
+                            : '<span class="text-[10px] text-slate-400">画像なし</span>'}
+                    </div>
+                    <div class="flex-1 flex flex-col min-w-0">
+                        <p class="text-[10px] font-mono text-slate-500 truncate">${escapeHtml(body.partNumber)}</p>
+                        <p class="text-sm font-bold text-slate-800 truncate flex-1">${escapeHtml(body.name)}</p>
+                        <div class="flex gap-1 mt-2 flex-wrap">
+                            ${body.imageDataUrl ? `<button data-action="apply" data-id="${body.id}" class="flex-1 text-[11px] px-2 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-bold transition-colors">背景に適用</button>` : ''}
+                            <button data-action="edit" data-id="${body.id}" class="text-[11px] px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md font-medium transition-colors">編集</button>
+                            <button data-action="delete" data-id="${body.id}" class="text-[11px] px-2 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-md font-medium transition-colors">削除</button>
+                        </div>
+                    </div>
+                `;
+                bodyListEl.appendChild(card);
+            });
+        };
+
+        const updateSelectedBodyBadge = () => {
+            if (state.selectedBodyId != null) {
+                const body = state.bodies.find(b => b.id === state.selectedBodyId);
+                if (body) {
+                    selectedBodyBadge.classList.remove('hidden');
+                    selectedBodyBadge.classList.add('flex');
+                    selectedBodyBadge.innerHTML = `
+                        <span class="text-[9px] font-bold text-indigo-500 uppercase">選択中</span>
+                        <span class="text-[10px] font-mono text-slate-500 truncate">${escapeHtml(body.partNumber)}</span>
+                        <span class="text-xs font-bold text-slate-700 truncate flex-1">${escapeHtml(body.name)}</span>
+                    `;
+                    return;
+                }
+            }
+            selectedBodyBadge.classList.add('hidden');
+            selectedBodyBadge.classList.remove('flex');
+        };
+
+        // 起動時にバッジを初期化（未選択状態）
+        updateSelectedBodyBadge();
+
+        // イベントバインド
+        btnOpenBody.addEventListener('click', openBodyModal);
+        btnCloseBody.addEventListener('click', closeBodyModal);
+        bodyModal.addEventListener('click', (e) => {
+            if (e.target === bodyModal) closeBodyModal();
+        });
+
+        btnBodyNew.addEventListener('click', () => showBodyForm(null));
+        btnBodyBack.addEventListener('click', showBodyList);
+        btnBodyCancel.addEventListener('click', showBodyList);
+
+        bodyInputImage.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                state.bodyFormImageSrc = reader.result;
+                updateBodyFormImagePreview();
+            };
+            reader.readAsDataURL(file);
+        });
+
+        btnBodyImageClear.addEventListener('click', () => {
+            state.bodyFormImageSrc = null;
+            bodyInputImage.value = '';
+            updateBodyFormImagePreview();
+        });
+
+        btnBodySave.addEventListener('click', () => {
+            const partNumber = bodyInputPn.value.trim();
+            const name = bodyInputName.value.trim();
+            if (!partNumber || !name) {
+                alert('品番と名前は必須です。');
+                return;
+            }
+
+            if (state.bodyFormEditingId != null) {
+                const body = state.bodies.find(b => b.id === state.bodyFormEditingId);
+                if (body) {
+                    body.partNumber = partNumber;
+                    body.name = name;
+                    body.imageDataUrl = state.bodyFormImageSrc;
+                }
+            } else {
+                state.bodies.push({
+                    id: Date.now() + Math.random(),
+                    partNumber,
+                    name,
+                    imageDataUrl: state.bodyFormImageSrc,
+                    createdAt: Date.now()
+                });
+            }
+
+            if (saveBodies()) {
+                updateSelectedBodyBadge();
+                showBodyList();
+            }
+        });
+
+        bodyListEl.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            const id = parseFloat(btn.dataset.id);
+            const action = btn.dataset.action;
+            const body = state.bodies.find(b => b.id === id);
+            if (!body) return;
+
+            if (action === 'apply') {
+                if (!body.imageDataUrl) return;
+                applyBackgroundImage(body.imageDataUrl);
+                state.selectedBodyId = id;
+                bgFile.value = ''; // ファイル入力との混同を避ける
+                updateSelectedBodyBadge();
+                closeBodyModal();
+            } else if (action === 'edit') {
+                showBodyForm(id);
+            } else if (action === 'delete') {
+                if (!confirm(`「${body.name}」を削除しますか？`)) return;
+                state.bodies = state.bodies.filter(b => b.id !== id);
+                if (state.selectedBodyId === id) state.selectedBodyId = null;
+                if (saveBodies()) {
+                    updateSelectedBodyBadge();
+                    renderBodyList();
+                }
+            }
+        });
+
+
         // ====== 5. 入稿用PNG出力 ======
+        // ファイル名指定用の共通プロンプト（.png拡張子を保証）
+        const promptFileName = (defaultName) => {
+            const input = window.prompt('保存するファイル名を入力してください（.pngは自動付与）', defaultName.replace(/\.png$/i, ''));
+            if (input === null) return null; // キャンセル
+            const trimmed = input.trim();
+            const base = trimmed === '' ? defaultName.replace(/\.png$/i, '') : trimmed;
+            // ファイル名に使えない文字を除去
+            const safe = base.replace(/[\\/:*?"<>|]/g, '_');
+            return /\.png$/i.test(safe) ? safe : `${safe}.png`;
+        };
+
         // パターンA：枠内のみ（入稿用素材）高解像度出力
         document.getElementById('btn-export-print').addEventListener('click', () => {
             if (state.images.length === 0) return alert("枠内に画像がありません。");
-            
+
+            const defaultName = `PrintData_${state.cmW}x${state.cmH}cm_${state.exportDpi}dpi.png`;
+            const fileName = promptFileName(defaultName);
+            if (!fileName) return;
+
             // 出力サイズ（350dpi換算のピクセル数）
             const pxW = Math.round((state.cmW * CM_TO_INCH) * state.exportDpi);
             const pxH = Math.round((state.cmH * CM_TO_INCH) * state.exportDpi);
@@ -1041,13 +1424,17 @@
             });
 
             const link = document.createElement('a');
-            link.download = `PrintData_${state.cmW}x${state.cmH}cm_${state.exportDpi}dpi.png`;
+            link.download = fileName;
             link.href = cvs.toDataURL('image/png');
             link.click();
         });
 
         // パターンB：背景ごと（モックアップ）出力
         document.getElementById('btn-export-mockup').addEventListener('click', () => {
+            const defaultName = `Mockup_${Date.now()}.png`;
+            const fileName = promptFileName(defaultName);
+            if (!fileName) return;
+
             // 画面のワークスペース全体をキャプチャするイメージ
             const wsRect = workspace.getBoundingClientRect();
             const scale = 2; // 高画質化のため2倍スケールで描画
@@ -1105,7 +1492,7 @@
             ctx.restore(); // クリッピング解除
 
             const link = document.createElement('a');
-            link.download = `Mockup_${Date.now()}.png`;
+            link.download = fileName;
             link.href = cvs.toDataURL('image/png');
             link.click();
         });
