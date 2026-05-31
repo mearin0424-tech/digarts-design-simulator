@@ -32,6 +32,15 @@
             <span class="text-xs text-slate-500 font-medium ml-2 tracking-normal border-l border-slate-300 pl-3">入稿データ作成・品質チェックツール</span>
         </h1>
         <div class="flex items-center gap-3">
+            <!-- Undo / Redo ボタン群 -->
+            <div class="flex items-center gap-1 pr-3 border-r border-slate-300/70">
+                <button id="btn-undo" title="元に戻す (Ctrl+Z)" disabled class="flex items-center justify-center w-9 h-9 bg-white hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-white text-slate-700 rounded-lg transition-all border border-slate-200 shadow-sm active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg>
+                </button>
+                <button id="btn-redo" title="やり直す (Ctrl+Y / Ctrl+Shift+Z)" disabled class="flex items-center justify-center w-9 h-9 bg-white hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-white text-slate-700 rounded-lg transition-all border border-slate-200 shadow-sm active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-6.7L21 13"/></svg>
+                </button>
+            </div>
             <!-- 使い方ボタン (ライト・立体) -->
             <button id="btn-show-manual" class="flex items-center gap-2 px-4 py-2 bg-gradient-to-b from-white to-slate-100 hover:to-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-all border border-slate-200 shadow-sm hover:shadow-md active:scale-95 mr-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
@@ -682,6 +691,7 @@
                         hasLeak: false,
                         leakDataUrl: null
                     };
+                    pushHistory(); // 追加前の状態を履歴に保存
                     state.images.push(newImg);
                     state.selectedId = newImg.id;
 
@@ -763,8 +773,9 @@
 
                 // 画像の移動 (ドラッグ)
                 div.addEventListener('mousedown', (e) => {
+                    beginDragSnapshot(); // 選択変更を含む直前の状態を仮スナップショット
                     selectLayer(layer.id);
-                    
+
                     let isDraggingImg = true;
                     let sX = e.clientX;
                     let sY = e.clientY;
@@ -777,7 +788,7 @@
                         layer.y = sLayerY + (me.clientY - sY);
                         div.style.left = layer.x + 'px';
                         div.style.top = layer.y + 'px';
-                        
+
                         // プロパティパネルを直接更新 (DOM再構築を防ぎスムーズに移動)
                         const currentPxPerCm = getPixelsPerCm();
                         const inputX = document.getElementById(`input-x-${layer.id}`);
@@ -789,6 +800,7 @@
                         isDraggingImg = false;
                         window.removeEventListener('mousemove', onMove);
                         window.removeEventListener('mouseup', onUp);
+                        commitDragSnapshot(); // 変化があれば履歴に確定
                     };
                     window.addEventListener('mousemove', onMove);
                     window.addEventListener('mouseup', onUp);
@@ -811,6 +823,7 @@
                         
                         handle.addEventListener('mousedown', (e) => {
                             e.stopPropagation();
+                            beginDragSnapshot(); // リサイズ開始前の状態を仮スナップショット
                             let isResizingImg = true;
                             let sX = e.clientX;
                             let sY = e.clientY;
@@ -888,6 +901,7 @@
                                 isResizingImg = false;
                                 window.removeEventListener('mousemove', onMove);
                                 window.removeEventListener('mouseup', onUp);
+                                commitDragSnapshot(); // 変化があれば履歴に確定
                             };
                             window.addEventListener('mousemove', onMove);
                             window.addEventListener('mouseup', onUp);
@@ -987,6 +1001,7 @@
 
         window.removeLayer = (id, event) => {
             event.stopPropagation();
+            pushHistory(); // 削除前の状態を履歴に保存（復旧可能にする）
             state.images = state.images.filter(img => img.id !== id);
             if (state.selectedId === id) state.selectedId = null;
             renderLayers();
@@ -998,13 +1013,15 @@
         window.updateLayerProp = (id, prop, valStr) => {
             const val = parseFloat(valStr);
             if (isNaN(val)) return;
-            
+
             const layer = state.images.find(img => img.id === id);
             if (!layer) return;
 
             const ratio = layer.origH / layer.origW;
             const pxPerCm = getPixelsPerCm();
             const pxVal = val * pxPerCm;
+
+            pushHistory(); // 入力反映前の状態を履歴に保存
 
             if (prop === 'x') layer.x = pxVal;
             if (prop === 'y') layer.y = pxVal;
@@ -1394,7 +1411,8 @@
 
         // 既定ファイル名を「品番_ボディ名_素材ファイル名」形式で組み立てる
         // ボディ未選択 / 素材なしのセグメントはスキップし、何も埋まらない場合は fallback を返す
-        const buildDefaultName = (fallback) => {
+        // prefix は常に先頭に付与（モックアップ出力時の "sampleimage__" 等）
+        const buildDefaultName = (fallback, prefix = '') => {
             const parts = [];
             if (state.selectedBodyId != null) {
                 const body = state.bodies.find(b => b.id === state.selectedBodyId);
@@ -1409,8 +1427,8 @@
                     .filter(n => n.length > 0);
                 if (matNames.length > 0) parts.push(matNames.join('_'));
             }
-            if (parts.length === 0) return fallback;
-            return parts.join('_') + '.png';
+            if (parts.length === 0) return `${prefix}${fallback}`;
+            return `${prefix}${parts.join('_')}.png`;
         };
 
         // パターンA：枠内のみ（入稿用素材）高解像度出力
@@ -1453,7 +1471,7 @@
         // パターンB：背景ごと（モックアップ）出力
         document.getElementById('btn-export-mockup').addEventListener('click', () => {
             const fallback = `Mockup_${Date.now()}.png`;
-            const fileName = promptFileName(buildDefaultName(fallback));
+            const fileName = promptFileName(buildDefaultName(fallback, 'sampleimage__'));
             if (!fileName) return;
 
             // 画面のワークスペース全体をキャプチャするイメージ
@@ -1524,6 +1542,194 @@
                 selectLayer(null);
             }
         });
+
+        // ====== 6. Undo / Redo（素材画像の履歴管理）======
+        // 対象：素材画像の追加・削除・移動・リサイズ・cm数値入力
+        // 設計：操作直前のstate.imagesをスナップショットしてスタックに積む。
+        //       imgオブジェクトは参照で持つため、削除した画像も完全に復元できる。
+        const history = {
+            past: [],
+            future: [],
+            MAX: 100,
+            pending: null
+        };
+
+        const btnUndo = document.getElementById('btn-undo');
+        const btnRedo = document.getElementById('btn-redo');
+
+        const snapshotState = () => ({
+            images: state.images.map(l => ({ ...l })), // shallow copy（img参照は維持）
+            selectedId: state.selectedId
+        });
+
+        // 画像配列の差分判定（id/位置/サイズの変化のみ見る）
+        const imagesAreEqual = (a, b) => {
+            if (a.length !== b.length) return false;
+            for (let i = 0; i < a.length; i++) {
+                const x = a[i], y = b[i];
+                if (x.id !== y.id || x.x !== y.x || x.y !== y.y || x.w !== y.w || x.h !== y.h) return false;
+            }
+            return true;
+        };
+
+        const updateUndoUI = () => {
+            btnUndo.disabled = history.past.length === 0;
+            btnRedo.disabled = history.future.length === 0;
+        };
+
+        const pushHistory = () => {
+            history.past.push(snapshotState());
+            if (history.past.length > history.MAX) history.past.shift();
+            history.future = []; // 新しい操作が入ったらredoはクリア
+            updateUndoUI();
+        };
+
+        const applySnapshot = (snap) => {
+            state.images = snap.images.map(l => ({ ...l }));
+            state.selectedId = snap.selectedId;
+            // スキャン結果は無関係なので閉じる
+            document.getElementById('scan-result').classList.add('hidden');
+            renderLayers();
+            updateLayersListDOM();
+            // ガイドテキストの表示切替
+            if (state.images.length === 0 && (!bgImgEl.src || bgImgEl.style.display === 'none') && !workspace.style.backgroundColor) {
+                guideText.style.display = 'flex';
+            } else {
+                guideText.style.display = 'none';
+            }
+        };
+
+        const undo = () => {
+            if (history.past.length === 0) return;
+            history.future.push(snapshotState());
+            applySnapshot(history.past.pop());
+            updateUndoUI();
+        };
+
+        const redo = () => {
+            if (history.future.length === 0) return;
+            history.past.push(snapshotState());
+            applySnapshot(history.future.pop());
+            updateUndoUI();
+        };
+
+        // ドラッグ/リサイズ用：mousedownでスナップショット、mouseupで差分があれば確定
+        const beginDragSnapshot = () => {
+            history.pending = snapshotState();
+        };
+        const commitDragSnapshot = () => {
+            if (!history.pending) return;
+            if (!imagesAreEqual(history.pending.images, state.images)) {
+                history.past.push(history.pending);
+                if (history.past.length > history.MAX) history.past.shift();
+                history.future = [];
+                updateUndoUI();
+            }
+            history.pending = null;
+        };
+
+        btnUndo.addEventListener('click', undo);
+        btnRedo.addEventListener('click', redo);
+
+        // キーボードショートカット（Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y、Macは Cmd）
+        window.addEventListener('keydown', (e) => {
+            const tag = (e.target && e.target.tagName || '').toLowerCase();
+            // テキスト入力中はブラウザ標準のundoに任せる
+            if (tag === 'input' || tag === 'textarea' || (e.target && e.target.isContentEditable)) return;
+
+            const isMac = navigator.platform.toUpperCase().includes('MAC');
+            const mod = isMac ? e.metaKey : e.ctrlKey;
+            if (!mod) return;
+
+            const key = e.key.toLowerCase();
+            if (key === 'z') {
+                e.preventDefault();
+                if (e.shiftKey) redo(); else undo();
+            } else if (key === 'y') {
+                e.preventDefault();
+                redo();
+            }
+        });
+
+        updateUndoUI();
+
+        // ====== 7. レスポンシブ対応 ======
+        // ワークスペースのサイズ変化を監視し、枠・配置画像・背景画像を比例スケールする。
+        // 実寸(cm)は変えず、表示上のpx密度のみ連動させることで、DPIや印刷サイズの整合性を保つ。
+        let prevWorkspaceSize = null;
+
+        const handleWorkspaceResize = () => {
+            const rect = workspace.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) return;
+
+            // 初回観測：calc(...)による枠の位置をpxに固定し、基準サイズを記録するだけ
+            if (prevWorkspaceSize === null) {
+                canvasFrame.style.left = canvasFrame.offsetLeft + 'px';
+                canvasFrame.style.top = canvasFrame.offsetTop + 'px';
+                prevWorkspaceSize = { w: rect.width, h: rect.height };
+                return;
+            }
+
+            const scaleX = rect.width / prevWorkspaceSize.w;
+            const scaleY = rect.height / prevWorkspaceSize.h;
+            // 枠のアスペクト比（=印刷物のcm比）を崩さないため、サイズは最小スケールで統一
+            const scale = Math.min(scaleX, scaleY);
+
+            if (!isFinite(scale) || scale <= 0 || Math.abs(scale - 1) < 0.0005) {
+                prevWorkspaceSize = { w: rect.width, h: rect.height };
+                return;
+            }
+
+            // --- 1. 枠（キャンバス）の位置とサイズをスケール ---
+            const frameW = parseFloat(canvasFrame.style.width) || 300;
+            const frameH = parseFloat(canvasFrame.style.height) || 300;
+            const frameLeft = parseFloat(canvasFrame.style.left) || 0;
+            const frameTop = parseFloat(canvasFrame.style.top) || 0;
+
+            // 枠中心のワークスペース内比率を維持したまま、サイズだけ等倍スケール
+            const oldCenterX = frameLeft + frameW / 2;
+            const oldCenterY = frameTop + frameH / 2;
+            const ratioX = oldCenterX / prevWorkspaceSize.w;
+            const ratioY = oldCenterY / prevWorkspaceSize.h;
+
+            const newFrameW = frameW * scale;
+            const newFrameH = frameH * scale;
+            const newCenterX = rect.width * ratioX;
+            const newCenterY = rect.height * ratioY;
+
+            canvasFrame.style.width = newFrameW + 'px';
+            canvasFrame.style.height = newFrameH + 'px';
+            canvasFrame.style.left = (newCenterX - newFrameW / 2) + 'px';
+            canvasFrame.style.top = (newCenterY - newFrameH / 2) + 'px';
+
+            // --- 2. 配置画像（素材）の座標とサイズを枠と同じ比率でスケール ---
+            state.images.forEach(layer => {
+                layer.x *= scale;
+                layer.y *= scale;
+                layer.w *= scale;
+                layer.h *= scale;
+            });
+
+            // --- 3. 背景画像も連動（中央配置はCSSが担保、scaleのみ追従）---
+            if (bgImgEl.src && bgImgEl.style.display !== 'none') {
+                state.bgScale *= scale;
+                bgImgEl.style.transform = `translate(-50%, -50%) scale(${state.bgScale})`;
+                bgScaleInput.value = Math.round(state.bgScale * 100);
+            }
+
+            // --- 4. 縮尺ロック中のpx/cmレートも連動（実寸cmを保ったまま表示密度のみ更新）---
+            if (state.lockedPxPerCm) {
+                state.lockedPxPerCm *= scale;
+            }
+
+            prevWorkspaceSize = { w: rect.width, h: rect.height };
+
+            renderLayers();
+            updateLayersListDOM();
+        };
+
+        const workspaceResizeObserver = new ResizeObserver(handleWorkspaceResize);
+        workspaceResizeObserver.observe(workspace);
 
     </script>
 </body>
