@@ -1672,10 +1672,25 @@
 
             const scaleX = rect.width / prevWorkspaceSize.w;
             const scaleY = rect.height / prevWorkspaceSize.h;
-            // 枠のアスペクト比（=印刷物のcm比）を崩さないため、サイズは最小スケールで統一
-            const scale = Math.min(scaleX, scaleY);
 
-            if (!isFinite(scale) || scale <= 0 || Math.abs(scale - 1) < 0.0005) {
+            // 「変化した軸」だけを集める。
+            // 単純に min(scaleX, scaleY) を使うと、片軸だけ拡大した場合に
+            // もう片方の 1.0 に引っ張られてスケールが効かない（拡大時に無反応になる）。
+            // 変化のあった軸の最小値を採用することで、拡縮どちらも対称に反応しつつ
+            // 枠のアスペクト比（印刷物のcm比）を保つ。
+            const EPS = 0.001;
+            const changedScales = [];
+            if (Math.abs(scaleX - 1) > EPS) changedScales.push(scaleX);
+            if (Math.abs(scaleY - 1) > EPS) changedScales.push(scaleY);
+
+            if (changedScales.length === 0) {
+                prevWorkspaceSize = { w: rect.width, h: rect.height };
+                return;
+            }
+
+            const scale = Math.min(...changedScales);
+
+            if (!isFinite(scale) || scale <= 0) {
                 prevWorkspaceSize = { w: rect.width, h: rect.height };
                 return;
             }
